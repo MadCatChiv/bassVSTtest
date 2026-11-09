@@ -25,8 +25,8 @@ juce_add_plugin(BassDriver
     COPY_PLUGIN_AFTER_BUILD TRUE)
 
 target_sources(BassDriver PRIVATE
-    Source/PluginProcessor.cpp
-    Source/PluginEditor.cpp)
+    PluginProcessor.cpp
+    PluginEditor.cpp)
 
 target_compile_features(BassDriver PRIVATE cxx_std_17)
 
