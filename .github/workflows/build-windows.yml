@@ -1,0 +1,24 @@
+name: Build Windows VST3
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -B build -G "Visual Studio 17 2022" -A x64 -DCOPY_PLUGIN_AFTER_BUILD=OFF
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - name: Collect
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item -Recurse "build/BassDriver_artefacts/Release/VST3/Bass Driver.vst3" dist/
+          Copy-Item "build/BassDriver_artefacts/Release/Standalone/Bass Driver.exe" dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BassDriver-Windows
+          path: dist
