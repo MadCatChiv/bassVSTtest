@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(BassDriver VERSION 1.0.0)
+project(BassDriver VERSION 2.0.0)
 
 include(FetchContent)
 FetchContent_Declare(JUCE
@@ -22,18 +22,29 @@ juce_add_plugin(BassDriver
     PLUGIN_CODE Bsdr
     FORMATS ${PLUGIN_FORMATS}
     PRODUCT_NAME "Bass Driver"
-    COPY_PLUGIN_AFTER_BUILD TRUE)
+    COPY_PLUGIN_AFTER_BUILD FALSE)
 
+# All source files live in the repository root (flat layout: easy to upload via the GitHub web UI).
 target_sources(BassDriver PRIVATE
     PluginProcessor.cpp
-    PluginEditor.cpp)
+    PluginProcessor.h
+    PluginEditor.cpp
+    PluginEditor.h
+    BassBiquad.h
+    BassVoicings.h
+    BassSaturation.h
+    BassCompressor.h
+    BassLoudness.h
+    BassCabSim.h
+    BassPresets.h)
 
 target_compile_features(BassDriver PRIVATE cxx_std_17)
 
 target_compile_definitions(BassDriver PUBLIC
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
-    JUCE_VST3_CAN_REPLACE_VST2=0)
+    JUCE_VST3_CAN_REPLACE_VST2=0
+    JUCE_DISPLAY_SPLASH_SCREEN=0)
 
 target_link_libraries(BassDriver
     PRIVATE

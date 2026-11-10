@@ -1,28 +1,41 @@
-# Bass Driver
+# Bass Driver 2.0
 
-A DI/preamp-style bass driver (SansAmp-flavoured) as a VST3 / Standalone (+AU on macOS), built with JUCE.
+A DI / preamp-style bass processor: dual-stage compressor -> anti-aliased two-stage saturation with
+a tight clean low end -> analogue-style EQ -> cabinet (built-in models or your own IR), with
+loudness-aware automatic gain matching. VST3 + Standalone (AU on macOS), built with JUCE 8.
 
-## Build
-Needs CMake 3.22+ and a C++17 compiler (Visual Studio 2022 on Windows, Xcode on macOS, g++ on Linux).
+## Build (Windows, via GitHub - no Visual Studio needed)
+1. Upload ALL files in this folder to the root of your repo (replace the old ones).
+   The `.github/workflows/build-windows.yml` you already have is fine; it is included here too.
+2. Actions tab -> "Build Windows VST3" -> Run workflow -> download the `BassDriver-Windows` artifact.
+3. Copy the `Bass Driver.vst3` FOLDER to `C:\Program Files\Common Files\VST3\` and rescan in your DAW.
 
-    cmake -B build -DCMAKE_BUILD_TYPE=Release
-    cmake --build build --config Release
-
-JUCE is downloaded automatically. With COPY_PLUGIN_AFTER_BUILD the VST3 is installed to your
-system VST3 folder (on Windows you may need to run the build from an admin shell, or copy
-`build/BassDriver_artefacts/Release/VST3/Bass Driver.vst3` to `C:\Program Files\Common Files\VST3` yourself).
-Linux needs: libasound2-dev libfreetype-dev libfontconfig1-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxext-dev libgl-dev
+Local build: `cmake -B build -G "Visual Studio 17 2022" -A x64` then `cmake --build build --config Release`.
 
 ## Controls
-- **Drive** 0-10: up to 40 dB of gain into the saturator. Level-compensated, so it changes grit, not volume.
-- **Blend**: clean (0%) to driven (100%). Below ~100 Hz the signal always stays clean, so the low end stays tight.
-- **Voice**: Tube (asymmetric, even harmonics, warm) / Solid State (hard knee, symmetric, punchy) / Fuzz (lopsided, gritty).
-- **Bass / Mid / Mid Freq / Treble / Presence**: post-drive tone stack (+/-12 dB; mid sweeps 200 Hz - 2.5 kHz).
-- **Cab Sim**: gentle ~5 kHz roll-off for a speaker-ish top end when you are not running a cab IR after it.
-- **Auto Input**: slowly levels what you play to a fixed reference so Drive feels the same for any bass/DI level.
-- **Auto Output**: matches the loudness coming out to the loudness going in (+/-24 dB), so you can sweep tone and drive without level jumps. Output knob is a trim on top. Settles in about a second after big level changes.
-- 5 built-in programs: Clean DI, Tube Warmth, Classic Scoop, Solid Rock, Fuzz Grind.
+| Section | Control | What it does |
+|---|---|---|
+| Drive | **Voicing** | DI Drive (SansAmp-style), Tube Stack (SVT-style), Studio Clean (hi-fi), Grind (modern aggressive), Fuzz |
+| | **Drive** | Saturation amount; level-compensated, so it changes grit, not volume |
+| | **Blend** | Clean <-> driven (lows always stay clean) |
+| | **Tight** | Crossover x0.5..x2: how much low end stays clean |
+| Compressor | **Comp** | Slow opto-style leveller (program-dependent release) |
+| | **Peak** | Fast peak catcher in series after Comp |
+| Tone | **Bass / Mid / Mid Freq / Treble / Presence** | Analogue-style EQ; corner frequencies follow the voicing; Mid is proportional-Q |
+| Cabinet | **Cab** + model | Vintage 1x15 / Punch 4x10 / Big 8x10 / **User IR** (any .wav/.aif/.flac, capped at 500 ms) |
+| Output | **Auto In** | Slowly levels your signal to -20 LUFS so Drive/Comp feel identical for any bass |
+| | **Auto Out** | Matches output loudness to input loudness (ITU-R BS.1770 K-weighted) |
+| | **Output** | Final trim after auto-matching |
 
-## Notes
-- 4x oversampled saturation (linear-phase), latency is reported to the host and the dry path is delay-compensated.
-- This is a voiced approximation of the DI-driver topology (split, saturate highs, blend, post EQ), not a circuit model of any specific product.
+Workflow: **A/B** slots (A>B copies), **Undo/Redo** (every drag/click is one step), **Shift-drag** for
+fine adjustment, **double-click** to reset, preset browser with 12 factory presets and user presets
+(Save... stores `.bdpreset` files; "Show preset folder" opens them), tooltips on every control.
+
+## Technical facts
+- Latency 61 samples (1.27 ms @ 48 kHz), reported to the host; bypass is latency-compensated.
+- CPU: roughly 3-4.5% of one core for the full stereo chain at 48 kHz; mono tracks cost about half.
+- Sessions saved by version 1 load correctly (old Voice choice is mapped to the new voicings).
+- See `TECHNICAL_NOTES.md` for the DSP design decisions and the measurements behind them.
+
+Voicing names describe the *character family* each is inspired by. They are original voicings,
+not circuit models of, nor affiliated with, any commercial product.
